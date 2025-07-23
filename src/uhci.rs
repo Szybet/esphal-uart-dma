@@ -1,4 +1,4 @@
-use crate::idf::hal::uhci_ll::{uhci_ll_enable_bus_clock, uhci_ll_reset_register};
+use crate::idf::hal::{uhci_hal::uhci_hal_init, uhci_ll::{uhci_ll_enable_bus_clock, uhci_ll_reset_register}};
 
 pub struct UhciPer {}
 
@@ -17,7 +17,7 @@ impl UhciPer {
         });
 
         // https://github.com/espressif/esp-idf/blob/bfe5caf58f742fd35c023335f475114a5b88761e/components/esp_driver_uart/src/uhci.c#L510
-        
+        uhci_hal_init();
 
         Self {}
     }
