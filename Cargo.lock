@@ -590,6 +590,7 @@ dependencies = [
  "esp-bootloader-esp-idf",
  "esp-hal",
  "esp-println",
+ "esp32c6",
  "log",
 ]
 

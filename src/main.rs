@@ -11,11 +11,14 @@ use esp_hal::main;
 use esp_hal::time::{Duration, Instant};
 use log::info;
 
+use crate::uhci::UhciPer;
+
 extern crate alloc;
 
 esp_bootloader_esp_idf::esp_app_desc!();
 
 mod uhci;
+pub mod idf;
 
 #[main]
 fn main() -> ! {
@@ -25,6 +28,8 @@ fn main() -> ! {
     let _peripherals = esp_hal::init(config);
 
     esp_alloc::heap_allocator!(size: 64 * 1024);
+
+    let _uhci = UhciPer::new(_peripherals.UHCI0);
 
     loop {
         info!("Hello world!");
