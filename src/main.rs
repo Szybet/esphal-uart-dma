@@ -52,13 +52,15 @@ fn main() -> ! {
         while delay_start.elapsed() < Duration::from_secs(2) {}
     }
 
-    let (rx_buffer, rx_descriptors, tx_buffer, tx_descriptors) = dma_buffers!(32000);
+    let (rx_buffer, rx_descriptors, tx_buffer, tx_descriptors) = dma_buffers!(100);
     let mut dma_rx = DmaRxBuf::new(rx_descriptors, rx_buffer).unwrap();
-    let dma_tx = DmaTxBuf::new(tx_descriptors, tx_buffer).unwrap();
+    let mut dma_tx = DmaTxBuf::new(tx_descriptors, tx_buffer).unwrap();
 
     let mut uhci = UhciPer::new(peripherals.UHCI0, peripherals.DMA_CH0);
     uhci.init();
-    uhci.configure(&mut dma_rx);
+    info!("Before configuring buffers");
+    uhci.configure(&mut dma_rx, &mut dma_tx);
+    info!("After configuring buffers");
 
     /*
     in_peri_sel
@@ -75,19 +77,35 @@ fn main() -> ! {
     */
 
     // How do I clear this buffer? dma_rx.as_mut_slice().fill(0); doesn't work, RxBuffer doesn't have anything interesting either
+    uhci.start_transfer_rx();
     loop {
         info!("After");
-        let mut buf: [u8; 128] = [0; 128];
+        let mut buf: [u8; 100] = [0; 100];
         let received = dma_rx.read_received_data(&mut buf);
         info!("Received bytes on DMA: {}", received);
         if received > 0 {
             let vec = buf.to_vec();
             match core::str::from_utf8(&vec) {
-                Ok(x) => info!("Received DMA message: {}", x),
+                Ok(x) => {
+                    info!("Received DMA message: {}", x);
+                    let tx_buff = dma_tx.as_mut_slice();
+                    let rx_buff = &mut buf;
+                    for i in 0..100 {
+                        tx_buff[i] = rx_buff[i];
+                    }
+                    uhci.start_transfer_tx();
+                }
                 Err(x) => error!("Error string: {}", x),
             }
+            /*
+            uhci.stop_transfer_tx();
+            uhci.stop_transfer_rx();
+
+            uhci.start_transfer_rx();
+            */
         }
-        tx.write(b"After uart").unwrap();
+
+        // tx.write(b"After uart").unwrap();
         /*
         if rx.read_ready() {
             let mut buf: [u8; 64] = [0u8; 64];
@@ -98,6 +116,6 @@ fn main() -> ! {
         }
         */
         let delay_start = Instant::now();
-        while delay_start.elapsed() < Duration::from_secs(2) {}
+        while delay_start.elapsed() < Duration::from_secs(3) {}
     }
 }
