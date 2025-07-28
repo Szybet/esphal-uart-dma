@@ -1,0 +1,4 @@
+[submodule "crates/esp-hal"]
+	path = crates/esp-hal
+	url = https://github.com/Szybet/esp-hal.git
+	branch = uart_dma
